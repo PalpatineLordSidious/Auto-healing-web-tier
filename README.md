@@ -13,11 +13,11 @@
 
 **Step 1:**
 
-terraform init
+```terraform init```
 
 **Step 2:**
 
-terraform apply
+```terraform apply```
 
 **Step 3:**
 
