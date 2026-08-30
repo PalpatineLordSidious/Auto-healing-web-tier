@@ -1,0 +1,381 @@
+Analysis work after deployment
+##############################
+Platform used: Kubernetes
+Lab Work
+30/8/2026
+
+#################
+Terraform install
+#################
+
+Files needed:
+- pods.yaml
+- main.tf
+
+Execute:
+
+terraform init
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Reusing previous version of hashicorp/null from the dependency lock file
+- Using previously-installed hashicorp/null v3.3.1
+
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+graeme@AxeCapital:~/Project$ terraform apply
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # null_resource.run_kubectl_cli will be created
+  + resource "null_resource" "run_kubectl_cli" {
+      + id       = (known after apply)
+      + triggers = {
+          + "file_sha" = "2e2e5e0cb4ecb367757b1e5e1d32bce1c754144e"
+        }
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+############################
+
+terraform apply
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # null_resource.run_kubectl_cli will be created
+  + resource "null_resource" "run_kubectl_cli" {
+      + id       = (known after apply)
+      + triggers = {
+          + "file_sha" = "eaae1ff53b6cac8c6e3bd4d4920918a25f884520"
+        }
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+null_resource.run_kubectl_cli: Creating...
+null_resource.run_kubectl_cli: Provisioning with 'local-exec'...
+null_resource.run_kubectl_cli (local-exec): Executing: ["/bin/sh" "-c" "kubectl create deployment web-cli --image=nginx"]
+null_resource.run_kubectl_cli (local-exec): deployment.apps/web-cli created
+null_resource.run_kubectl_cli: Provisioning with 'local-exec'...
+null_resource.run_kubectl_cli (local-exec): Executing: ["/bin/sh" "-c" "kubectl create deployment deploy-hello --image=pbitty/hello-from:latest --port=80 --replicas=3"]
+null_resource.run_kubectl_cli (local-exec): deployment.apps/deploy-hello created
+null_resource.run_kubectl_cli: Provisioning with 'local-exec'...
+null_resource.run_kubectl_cli (local-exec): Executing: ["/bin/sh" "-c" "kubectl apply -f ./pods.yaml"]
+null_resource.run_kubectl_cli (local-exec): pod/liveness-exec created
+null_resource.run_kubectl_cli: Creation complete after 1s [id=1291811253429987806]
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+############################
+
+# Run 2:
+
+terraform apply
+null_resource.run_kubectl_cli: Refreshing state... [id=1291811253429987806]
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+
+###################
+
+See what is there:
+
+graeme@AxeCapital:~/Project$ kubectl get pods
+NAME                            READY   STATUS             RESTARTS   AGE
+deploy-hello-64754bbc64-ck9wc   1/1     Running            0          2m2s
+deploy-hello-64754bbc64-d5nr7   1/1     Running            0          2m2s
+deploy-hello-64754bbc64-rr7kq   1/1     Running            0          2m2s
+liveness-exec                   0/1     ImagePullBackOff   0          2m2s
+web-cli-86895cb6-zffck          1/1     Running            0          2m3s
+
+graeme@AxeCapital:~/Project$ kubectl get deployments
+NAME           READY   UP-TO-DATE   AVAILABLE   AGE
+deploy-hello   3/3     3            3           2m16s
+web-cli        1/1     1            1           2m17s
+
+
+###################################################################################
+
+
+
+1. Display the artifacts created - we see the pod, deployment and replicaset: -  we see the pod, deployment, replicaset
+
+kubectl get all -l  app=web-cli
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/web-cli-86895cb6-zffck   1/1     Running   0          3m47s
+
+NAME                       TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+service/web-loadbalancer   LoadBalancer   10.108.184.130   <pending>     8080:30197/TCP   17h
+
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/web-cli   1/1     1            1           3m47s
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/web-cli-86895cb6   1         1         1       3m47s
+
+
+
+
+2. Expose deployment web-cli to a NodePort:
+kubectl expose deployment web-cli --port=80 --type=NodePort
+
+
+
+3. Use a minikube built-in command to call the web-cli service and view the nginx webpage
+minikube service web-cli
+
+?????????????????????????????????????????????????????????????????
+? NAMESPACE ?  NAME   ? TARGET PORT ?            URL            ?
+?????????????????????????????????????????????????????????????????
+? default   ? web-cli ? 80          ? http://192.168.49.2:32284 ?
+?????????????????????????????????????????????????????????????????
+??  Starting tunnel for service web-cli.
+??????????????????????????????????????????????????????????????
+? NAMESPACE ?  NAME   ? TARGET PORT ?          URL           ?
+??????????????????????????????????????????????????????????????
+? default   ? web-cli ?             ? http://127.0.0.1:37245 ?
+??????????????????????????????????????????????????????????????
+??  Opening service default/web-cli in default browser...
+??  http://127.0.0.1:37245
+?  Because you are using a Docker driver on linux, the terminal needs to be open to run it.
+
+
+
+
+4. First expose the web-cli application through a LoadBalancer Service, and then enable the tunnel:
+kubectl expose deployment web-cli --name=web-loadbalancer --type=LoadBalancer --port=8080
+
+kubectl get services
+web-loadbalancer   LoadBalancer   10.108.184.130   <pending>     8080:30197/TCP   17h
+
+
+5. Start/enable a tunnel through to the LoadBalancer:
+minikube tunnel
+?  Tunnel successfully started
+??  NOTE: Please do not close this terminal as this process must stay alive for the tunnel to be accessible ...
+??  Starting tunnel for service web-loadbalancer.
+
+Now check the EXTERNAL-IP:
+kubectl get services
+web-loadbalancer   LoadBalancer   10.108.184.130   127.0.0.1     8080:30197/TCP   17h
+
+In the browser the following URL (LoadBalancer Service External IP and Service port 8080) should display the Nginx welcome page: http://10.108.184.130:8080
+Ensure you are using the External IP of your Service which may be different than the one displayed above.
+
+Here it could not make the connection - something on my nw prevented this from happening. Therefore I adopted a different approach below which achived the LB outcome in step 8
+
+6. Resilience: delete a pod by 'mistake':
+
+kubectl get pods
+NAME                            READY   STATUS             RESTARTS   AGE
+deploy-hello-64754bbc64-ck9wc   1/1     Running            0          20m
+deploy-hello-64754bbc64-d5nr7   1/1     Running            0          20m
+deploy-hello-64754bbc64-rr7kq   1/1     Running            0          20m
+liveness-exec                   0/1     ImagePullBackOff   0          20m
+web-cli-86895cb6-zffck          1/1     Running            0          20m
+
+kubectl delete pod web-cli-86895cb6-zffck
+pod "web-cli-86895cb6-zffck" deleted from default namespace
+
+Wait a minute:
+
+kubectl get pods
+NAME                            READY   STATUS             RESTARTS   AGE
+deploy-hello-64754bbc64-ck9wc   1/1     Running            0          22m
+deploy-hello-64754bbc64-d5nr7   1/1     Running            0          22m
+deploy-hello-64754bbc64-rr7kq   1/1     Running            0          22m
+liveness-exec                   0/1     ImagePullBackOff   0          22m
+web-cli-86895cb6-b6wxd          1/1     Running            0          43s
+
+
+7. Liveness
+
+While containerized applications are scheduled to run in pods on nodes across our cluster, at times the applications may become unresponsive or may be delayed during startup. Implementing Liveness and Readiness Probes allows the kubelet to control the health of the application running inside a Pod's container and force a container restart of an unresponsive application.
+
+If a container in the Pod has been running successfully for a while, but the application running inside this container suddenly stopped responding to our requests, then that container is no longer useful to us. This kind of situation can occur, for example, due to application deadlock or memory pressure. In such a case, it is recommended to restart the container to make the application available.
+Rather than restarting it manually, we can use a Liveness Probe. Liveness Probe checks on an application's health, and if the health check fails, kubelet restarts the affected container automatically.
+Liveness Probes can be set by defining:
+
+•	Liveness command
+•	Liveness HTTP request
+•	TCP Liveness probe
+•	gRPC Liveness probe
+
+Liveness Probe and Command
+
+In the following example, the liveness command is checking the existence of a file /tmp/healthy.
+
+We define a pod that runs the popular busybox container image.
+It creates a healthy file upon startup, sleep 30s, remove the healthy file and sleep 600s.
+The probe cats the ehalthy file every 5s after an initial delay of 3s.
+The first few cat commands will be successful but once the file is removed after 30s, the probe will fail. the kubelet will wait for 3 concecutive failures before declaring the container unhealthy and doing a restart.
+In the yaml, the failure threshold is set to 1 meaning after a single failure by the probe, the container is declared unhealthy and the kubelet will restart the container
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: liveness-exec
+spec:
+  containers:
+  - name: liveness
+    image: k8s.gcr.io/busybox
+    args:
+    - /bin/sh
+    - -c
+    - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+    livenessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+      initialDelaySeconds: 15
+      failureThreshold: 1
+      periodSeconds: 5
+      
+This pod has been created in the terraform step
+
+Check what it is doing:
+kubectl get pod liveness-exec -w
+NAME            READY   STATUS             RESTARTS   AGE
+liveness-exec   0/1     ImagePullBackOff   0          24m
+
+Run this: kubectl describe pod liveness-exec and check the events section
+
+Events:
+  Type     Reason     Age                  From               Message
+  ----     ------     ----                 ----               -------
+  Normal   Scheduled  25m                  default-scheduler  Successfully assigned default/liveness-exec to minikube-m03
+  Normal   Pulling    23m (x4 over 25m)    kubelet            spec.containers{liveness}: Pulling image "k8s.gcr.io/busybox"
+  Warning  Failed     23m (x4 over 25m)    kubelet            spec.containers{liveness}: Failed to pull image "k8s.gcr.io/busybox": rpc error: code = Unimplemented desc = failed to pull and unpack image "k8s.gcr.io/busybox:latest": not implemented: media type "application/vnd.docker.distribution.manifest.v1+prettyjws" is no longer supported since containerd v2.1, please rebuild the image as "application/vnd.docker.distribution.manifest.v2+json" or "application/vnd.oci.image.manifest.v1+json"
+  Warning  Failed     23m (x4 over 25m)    kubelet            spec.containers{liveness}: Error: ErrImagePull
+  Warning  Failed     23m (x6 over 25m)    kubelet            spec.containers{liveness}: Error: ImagePullBackOff
+  Normal   BackOff    10s (x108 over 25m)  kubelet            spec.containers{liveness}: Back-off pulling image "k8s.gcr.io/busybox"
+  
+  We see an ImagePullBackOff status - the image download from the k8s repo is a problem
+
+Struggling to find the right lib and location and version of the right busybox library - otherwise it will work - there seems to be a discussion on-line about this as well and is a general problem to find the rigght lib
+
+
+
+
+
+8. Cluster IP and NodePort service types and Load balancing using a NodePort service (alternative to LB)
+########################################################################################################
+
+The Load Balancer created acted up on my home nw and I decided to use the NodePort service as a LB
+
+I used pod 'deploy-hello' for this work
+
+Check that the service and pod were created: get the pod, service, endpoint
+
+graeme@AxeCapital:~$ kubectl get po,svc,ep --show-labels
+NAME                                READY   STATUS             RESTARTS   AGE   LABELS
+pod/deploy-hello-64754bbc64-ck9wc   1/1     Running            0          52m   app=deploy-hello,pod-template-hash=64754bbc64
+pod/deploy-hello-64754bbc64-d5nr7   1/1     Running            0          52m   app=deploy-hello,pod-template-hash=64754bbc64
+pod/deploy-hello-64754bbc64-rr7kq   1/1     Running            0          52m   app=deploy-hello,pod-template-hash=64754bbc64
+
+NAME                       TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE   LABELS
+service/deploy-hello       NodePort       10.98.252.8      <none>        80:31357/TCP     16h   app=deploy-hello
+service/web-loadbalancer   LoadBalancer   10.108.184.130   127.0.0.1     8080:30197/TCP   18h   app=web-cli
+
+NAME                         ENDPOINTS                                             AGE   LABELS
+endpoints/deploy-hello       10.244.120.94:80,10.244.151.45:80,10.244.205.240:80   16h   app=deploy-hello
+endpoints/web-loadbalancer   10.244.205.241:8080                                   18h   app=web-cli
+
+Get the service name:
+kubectl describe svc deploy-hello | grep -i selector
+Selector:                 app=deploy-hello
+
+It is app=deploy-hello
+
+Get the pod ip:
+kubectl describe pod deploy-hello | grep -i podip:
+		                    cni.projectcalico.org/podIP: 10.244.120.94/32
+		                    cni.projectcalico.org/podIP: 10.244.151.45/32
+                  		    cni.projectcalico.org/podIP: 10.244.205.240/32
+                  
+The pod ip is 10.244.151.47 which matches the endpoint IP  
+
+Note that the servicetype above is a NodePort. It was a ClusterIP type which meant that the pod is only accessible through the cluster - how to access the pod from outside the cluster?
+By changing the service type to a NodePort.
+run:
+kubectl edit svc pod-hello
+
+This opens a yaml file, change the service type to NodePort and save
+So, the live service was just changed.
+It is now a NodePort service and listening on 80:31132
+
+Run minikube service --all again to reflect the url now:
+
+minikube service --all
+??????????????????????????????????????????????????????????????????????
+? NAMESPACE ?     NAME     ? TARGET PORT ?            URL            ?
+??????????????????????????????????????????????????????????????????????
+? default   ? deploy-hello ? 80          ? http://192.168.49.2:31357 ?
+??????????????????????????????????????????????????????????????????????
+
+We can run curl against the url of deploy-hello:
+
+curl http://192.168.49.2:31357
+
+Hello from deploy-hello-64754bbc64-ck9wc (10.244.120.94)graeme@AxeCapital:~$ curl http://192.168.49.2:31357
+Hello from deploy-hello-64754bbc64-d5nr7 (10.244.151.45)graeme@AxeCapital:~$ curl http://192.168.49.2:31357
+Hello from deploy-hello-64754bbc64-d5nr7 (10.244.151.45)graeme@AxeCapital:~$ curl http://192.168.49.2:31357
+Hello from deploy-hello-64754bbc64-rr7kq (10.244.205.240)graeme@AxeCapital:~$ curl http://192.168.49.2:31357
+Hello from deploy-hello-64754bbc64-ck9wc (10.244.120.94)graeme@AxeCapital:~$ curl http://192.168.49.2:31357
+Hello from deploy-hello-64754bbc64-d5nr7 (10.244.151.45)graeme@AxeCapital:~$ curl http://192.168.49.2:31357
+Hello from deploy-hello-64754bbc64-ck9wc (10.244.120.94)graeme@AxeCapital:~$ curl http://192.168.49.2:31357
+Hello from deploy-hello-64754bbc64-rr7kq (10.244.205.240)graeme@AxeCapital:~$ curl http://192.168.49.2:31357
+Hello from deploy-hello-64754bbc64-rr7kq (10.244.205.240)graeme@AxeCapital:~$ curl http://192.168.49.2:31357
+
+See how the NodePort service is loadbalacing against the 3 IPs of the 3 deploy-hello pods above
+
+
+
+
+
+
+
+
+
+                  
+
+
+
+
+
