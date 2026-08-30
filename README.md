@@ -35,12 +35,14 @@ Rerun step 2 and record output
 
 Follow Lab Notes txt file and refer to screens in Lab Screenshots.docx file
 
+**Cloud consideration**
+
+I did not commit this work to any cloud platform for costing reasons and I am cloud invariant. But will probably choose GCP over AWS as they may be cheaper.
+
 **Network tolopogy layout**
 
 <img width="800" height="520" alt="image" src="https://github.com/user-attachments/assets/157b2a81-c43e-49a5-84f7-2d466f552e22" />
 
-**Cloud consideration**
 
-I did not commit this work to any cloud platform for costing reasons and I am cloud invariant. But will probably choose GCP over AWS as they may be cheaper.
 
 
