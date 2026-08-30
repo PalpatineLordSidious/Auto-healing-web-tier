@@ -25,7 +25,7 @@ Rerun step 2 and record output
 
 **Step 4:**
 
-Follow Lab Notes file
+Follow Lab Notes txt file and refer to screens in Lab Screenshots.docx file
 
 **Architecture layout**
 
