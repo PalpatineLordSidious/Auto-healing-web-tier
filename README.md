@@ -3,7 +3,7 @@
 
 ## **Lab Work: Stand up an auto-healing web tier that can lose any single VM without downtime.**
 
-**Terraform install**
+**Terraform install Kubernetes objects**
 
 **Files needed:**
 
@@ -11,11 +11,11 @@
 - main.tf
 
 
-**Step 1:**
+**Step 1: Execute:**
 
 ```terraform init```
 
-**Step 2:**
+**Step 2: Execute**
 
 ```terraform apply```
 
