@@ -37,7 +37,7 @@ Follow Lab Notes txt file and refer to screens in Lab Screenshots.docx file
 
 **Cloud consideration**
 
-I did not commit this work to any cloud platform for costing reasons and I am cloud invariant. But will probably choose GCP over AWS as they may be cheaper.
+I did not commit this work to any cloud platform (yet) for costing reasons and I am cloud invariant. But will probably choose GCP over AWS as they may be cheaper.
 
 **Network tolopogy layout**
 
