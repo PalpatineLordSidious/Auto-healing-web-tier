@@ -27,7 +27,7 @@ Rerun step 2 and record output
 
 Follow Lab Notes txt file and refer to screens in Lab Screenshots.docx file
 
-**Architecture layout**
+**Network tolopogy layout**
 
 <img width="800" height="520" alt="image" src="https://github.com/user-attachments/assets/157b2a81-c43e-49a5-84f7-2d466f552e22" />
 
