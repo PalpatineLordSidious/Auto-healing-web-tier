@@ -29,7 +29,8 @@ Follow Lab Notes file
 
 **Architecture layout**
 
-<img width="1393" height="906" alt="image" src="https://github.com/user-attachments/assets/88eb2e6c-55c2-4334-993c-b7233b94a935" />
+<img width="800" height="520" alt="image" src="https://github.com/user-attachments/assets/157b2a81-c43e-49a5-84f7-2d466f552e22" />
+
 
 
 
