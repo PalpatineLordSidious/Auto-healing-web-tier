@@ -27,4 +27,9 @@ Rerun step 2 and record output
 
 Follow Lab Notes file
 
+**Architecture layout**
+
+<img width="1393" height="906" alt="image" src="https://github.com/user-attachments/assets/88eb2e6c-55c2-4334-993c-b7233b94a935" />
+
+
 
