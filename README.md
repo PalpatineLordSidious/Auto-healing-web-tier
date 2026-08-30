@@ -1,5 +1,13 @@
 ## # Auto-healing-web-tier
 
+Platform used: Kubernetes
+
+```kubectl version
+Client Version: v1.36.2
+Kustomize Version: v5.8.1
+Server Version: v1.28.3
+```
+
 
 ## **Lab Work: Stand up an auto-healing web tier that can lose any single VM without downtime.**
 
